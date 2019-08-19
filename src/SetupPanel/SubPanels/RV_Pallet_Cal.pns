@@ -1,0 +1,34 @@
+#include <PanelMain.h> raw
+
+#Include "..\RV_Setup_Main.h"
+
+Sub PB1_CLICKED()
+	Call RV_InputRim(NB1.Value)
+	NB1.Value = NB1.Value + 1
+End Sub
+
+Sub PB2_CLICKED()
+	NB1.Value = 1
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H000000
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"Label1",70,120,290,40,&H000000,&HB0B0B0,0,1,0,"Move Robot to Corner No:",16,0,"Segoe UI","",1,1;
+add_widget 5,"NB1",370,120,50,40,&H000000,&HB0B0B0,0,3,0,"NB1",16,0,1,"Segoe UI";
+add_widget 2,"Label2",70,170,200,50,&H000000,&HB0B0B0,0,1,0,"Send Robot Position ",16,0,"Segoe UI","",1,1;
+add_widget 1,"PB1",280,170,110,50,&H000000,&HB0B0B0,0,3,1,"Send",16,0,0,"Segoe UI";
+add_widget 1,"PB2",440,120,100,40,&H000000,&HB0B0B0,0,3,1,"Reset",16,0,0,"Segoe UI";
+add_widget 2,"Label3",430,300,200,50,&H000000,&HB0B0B0,0,1,0,"Send Robot Position ",16,0,"Segoe UI","densologo.bmp",1,1;
+add_widget 2,"Label4",20,10,240,40,&H00FFFF,&H000000,0,1,0,"Palletizing Calibration:",16,0,"Segoe UI","",1,1;
+'<<--TPDESIGNER_RESERVED-->>
+#endif

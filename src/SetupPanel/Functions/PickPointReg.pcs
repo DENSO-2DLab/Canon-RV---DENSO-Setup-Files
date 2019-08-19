@@ -1,0 +1,58 @@
+'!TITLE "Denso robot program"
+
+#Include "..\RV_Setup_Main.h"
+
+Sub Main(ByVal AppDist As Single, ByVal RefOption As Integer)
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+
+	I[PLAPP_OK] = GRAY		' Panel Flag
+	S[LBPICK_COORD] = ""	' Panel Flag
+
+	Call ComOpen()			' Open the communication line
+	
+	' Check the vision mode
+	vis_data = QueryMode
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+	
+	vis_mode = GetVisMode(vis_data)
+	If vis_mode <> VIS_MODE_GRASP_ Then
+		MsgBox("Vision mode is not the Grasp-teaching mode.")
+		Goto Finally
+	End If
+	
+	' (Is CurPos CheckBox False?)
+	If RefOption = 1 Then 
+		P[PART_COORD_POS] = CurPos
+	End If
+	
+	' Calculate Approach Position
+	P[PICK_APP_POS] = DevH(P[PART_COORD_POS], P(0,0,-AppDist))	
+	
+	' Check if Approach Pos is InRange
+	If OutRange(P[PICK_APP_POS]) <> 0 Then				
+		I[PLAPP_OK] = RED								' Panel Flag
+		P[PICK_COORD_POS] = P(0,0,0,0,0,0)				' Panel Flag
+		MsgBox("Approach Position is out of range... Set smaller distance")
+		GoTo Finally
+	Else
+		I[PLAPP_OK] = GREEN 							' Panel Flag
+		S[LBPICK_COORD] = Pos2String(P[PICK_COORD_POS]) ' Panel Flag		 
+	End If 
+
+	' Grasp information registration 
+	vis_data = CatchPoint(I[NBTASK_ID], I[NBGRASP_ID], ToolPos(CurTool), P[PICK_APP_POS], P[PART_COORD_POS])	
+	
+Finally:
+	' Display the number if Vision status is abnormal.
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then
+		MsgBox("Vision status:" & vis_status)
+		I[PLAPP_OK] = RED
+	End If
+
+	'Close the communication line
+	Call ComClose()	
+End Sub

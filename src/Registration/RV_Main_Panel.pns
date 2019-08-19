@@ -1,0 +1,225 @@
+#include <PanelMain.h> raw
+#include "RV_ReadyCalib.pcs"
+#include "RV_CalibMarker.pcs"
+#include "RV_PoseWork.pcs"
+#include "RV_CatchPoint.pcs"
+#include "RV_Place.pcs"
+#include "RV_ReadyRim.pcs"
+#include "RV_InputRim.pcs"
+
+Public marker_scene As Integer
+Public marker_scene_index As Integer
+Public task_id As Integer
+Public grasp_id As Integer
+Public app_dist As Double
+Public place_id As Integer
+Public base_grasp_id As Integer
+Public pin_scene As Integer
+Public pin_scene_index As Integer
+Dim work_pos As Position
+
+'Initialize
+Sub Panel_INITIALIZE()
+	If marker_scene <> 0 Then
+		NBMarkerScene.Value = marker_scene
+	End If
+	If marker_scene_index <> 0 Then
+		NBMarkerSceneIndex.Value = marker_scene_index
+	End If
+	If task_id <> 0 Then
+		NBTaskID.Value = task_id
+	End If
+	If grasp_id <> 0 Then
+		NBGraspID.Value = grasp_id
+	End If
+	If app_dist <> 0 Then
+		NBAppDist.Value = app_dist
+	End If
+	If place_id <> 0 Then
+		NBPlaceID.Value = place_id
+	End If
+	If base_grasp_id <> 0 Then
+		NBBaseGraspID.Value = base_grasp_id
+	End If
+	If pin_scene <> 0 Then
+		NBPinScene.Value = pin_scene
+	End If
+	If pin_scene_index <> 0 Then
+		NBPinSceneIndex.Value = pin_scene_index
+	End If
+End Sub
+
+'End
+Sub Panel_TERMINATE()
+	marker_scene = NBMarkerScene.Value
+	marker_scene_index = NBMarkerSceneIndex.Value
+	task_id = NBTaskID.Value
+	grasp_id = NBGraspID.Value
+	app_dist = NBAppDist.Value
+	place_id = NBPlaceID.Value
+	base_grasp_id = NBBaseGraspID.Value
+	pin_scene = NBPinScene.Value
+	pin_scene_index = NBPinSceneIndex.Value
+End Sub
+
+'==========================================
+'Execute button
+'==========================================
+
+'Marker measurement
+Sub IPBCalibMarker_CLICKED()
+	IPBCalibMarker.State = Off
+	Call RV_CalibMarker(NBMarkerSceneIndex.Value)
+	IPBCalibMarker.State = On
+	NBMarkerSceneIndex.Value = NBMarkerSceneIndex.Value + 1
+End Sub
+
+'Workpiece measurement
+Sub IPBPoseWork_CLICKED()
+	IPBPoseWork.State = Off
+	work_pos = RV_PoseWork(NBTaskID.Value)
+	IPBPoseWork.State = On
+End Sub
+
+'Grasp position registration
+Sub IPBCatchPoint_CLICKED()
+	IPBCatchPoint.State = Off
+	Call RV_CatchPoint(NBTaskID.Value, NBGraspID.Value, NBAppDist.Value, work_pos, NBPlaceID.Value)
+	IPBCatchPoint.State = On
+	NBGraspID.Value = NBGraspID.Value + 1
+End Sub
+
+'Placement position registration
+Sub IPBPlace_CLICKED()
+	IPBPlace.State = Off
+	Call RV_Place(NBTaskID.Value, NBPlaceID.Value, NBBaseGraspID.Value)
+	IPBPlace.State = On
+	MsgBox("Placement position has been registered.")
+End Sub
+
+'Pin position registration
+Sub IPBInputRim_CLICKED()
+	IPBInputRim.State = Off
+	Call RV_InputRim(NBPinSceneIndex.Value)
+	IPBInputRim.State = On
+	NBPinSceneIndex.Value = NBPinSceneIndex.Value + 1
+End Sub
+
+'==========================================
+'Parameter setting
+'==========================================
+
+'Marker scene number registration
+Sub NBMarkerScene_DONE()
+	If NBMarkerScene.Value < 4 Then
+		MsgBox("Out-of-available range. [4 or more]")
+		NBMarkerScene.Value = 1
+	Else
+		Call RV_ReadyCalib(NBMarkerScene.Value)
+		NBMarkerSceneIndex.Value = 1
+	End If
+End Sub
+
+'Enter a marker number
+Sub NBMarkerSceneIndex_DONE()
+	If NBMarkerSceneIndex.Value < 1 Or NBMarkerSceneIndex.Value > NBMarkerScene.Value Then
+		MsgBox("Out-of-available range. [1 to Scene number]")
+		NBMarkerSceneIndex.Value = 1
+	End If
+End Sub
+
+'Task ID
+Sub NBTaskID_DONE()
+	If NBTaskID.Value < 1 Or NBTaskID.Value > 200 Then
+		MsgBox("Out-of-available range. [1 to 200]")
+		NBMarkerSceneIndex.Value = 1
+	End If
+End Sub
+
+'Grasp ID
+Sub NBGraspID_DONE()
+	If NBGraspID.Value < 1 Or NBGraspID.Value > 100 Then
+		MsgBox("Out-of-available range. [1 to 100]")
+		NBGraspID.Value = 1
+	End If
+End Sub
+
+'Placement direction ID
+Sub NBPlaceID_DONE()
+	If NBPlaceID.Value < 1 Or NBPlaceID.Value > 2 Then
+		MsgBox("Out-of-available range. [1 to 2]")
+		NBPlaceID.Value = 1
+	End If
+End Sub
+
+'Reference grasp ID
+Sub NBBaseGraspID_DONE()
+	If NBBaseGraspID.Value < 1 Or NBBaseGraspID.Value > 100 Then
+		MsgBox("Out-of-available range. [1 to 100]")
+		NBBaseGraspID.Value = 1
+	End If
+End Sub
+
+'Pin scene number registration
+Sub NBPinScene_DONE()
+	If NBPinScene.Value < 4 Then
+		MsgBox("Out-of-available range. [4 or more]")
+		NBPinScene.Value = 1
+	Else
+		Call RV_ReadyRim(NBPinScene.Value)
+		NBPinSceneIndex.Value = 1
+	End If
+End Sub
+
+'Enter a pin number
+Sub NBPinSceneIndex_DONE()
+	If NBPinSceneIndex.Value < 1 Or NBPinSceneIndex.Value > NBPinScene.Value Then
+		MsgBox("Out-of-available range. [1 to Scene number]")
+		NBPinSceneIndex.Value = 1
+	End If
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H754E3A
+FG=&H000000
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"LabelCatchPoint",0,120,640,170,&HFFFFFF,&H5E0000,0,1,0,"Grasp information \n    registration",16,2,"メイリオ","",1,1;
+add_widget 2,"LabelCalib",0,50,640,70,&HFFFFFF,&H5E0000,0,1,0,"Calibration",16,2,"メイリオ","",1,1;
+add_widget 2,"LabelInputRim",0,290,640,70,&HFFFFFF,&H5E0000,0,1,0,"Pallet flat surface\n   calculation",16,2,"メイリオ","",1,1;
+add_widget 7,"RectCalib",0,50,640,70,&H00FF00,&HB0B0B0,0,1,0,5;
+add_widget 7,"RectInputRim",0,290,640,70,&H00FF00,&HB0B0B0,0,1,0,5;
+add_widget 7,"RectCatchPoint",0,120,640,170,&H00FF00,&HB0B0B0,0,1,0,5;
+add_widget 17,"IPBPlace",430,240,200,30,&H282828,&HFFFFFF,0,3,1,"Placement position regist.",11,0,1,"メイリオ";
+add_widget 17,"IPBPoseWork",430,140,200,30,&H282828,&HFFFFFF,0,3,1,"Workpiece measurement",12,0,1,"メイリオ";
+add_widget 17,"IPBCalibMarker",430,70,200,30,&H282828,&HFFFFFF,0,3,1,"Marker measurement",12,0,1,"メイリオ";
+add_widget 17,"IPBCatchPoint",430,190,200,30,&H282828,&HFFFFFF,0,3,1,"Grasp position registration",11,0,1,"メイリオ";
+add_widget 17,"IPBInputRim",430,310,200,30,&H282828,&HFFFFFF,0,3,1,"Pin position registration",11,0,1,"メイリオ";
+add_widget 5,"NBMarkerScene",360,60,60,21,&H000000,&HFFFFFF,0,3,0,"NBMarkerScene",14,0,8,"メイリオ";
+add_widget 5,"NBPinScene",360,300,60,20,&H000000,&HFFFFFF,0,3,0,"NBPinScene",14,0,4,"メイリオ";
+add_widget 2,"LabelMarkerScene",240,60,120,21,&H000000,&H00D7FF,0,1,0,"Scene number",10,0,"メイリオ","",1,1;
+add_widget 2,"LabelPinScene",240,300,120,20,&H000000,&H00D7FF,0,1,0,"Scene number",10,0,"メイリオ","",1,1;
+add_widget 2,"LabelMakerSceneIndex",240,90,120,20,&H000000,&H00D7FF,0,1,0,"Marker number",10,0,"メイリオ","",1,1;
+add_widget 5,"NBMarkerSceneIndex",360,90,60,20,&H000000,&HFFFFFF,0,3,0,"NBMarkerSceneIndex",14,0,1,"メイリオ";
+add_widget 2,"LabelPinSceneIndex",240,330,120,20,&H000000,&H00D7FF,0,1,0,"Pin number",10,0,"メイリオ","",1,1;
+add_widget 5,"NBPinSceneIndex",360,330,60,20,&H000000,&HFFFFFF,0,3,0,"NBPinSceneIndex",14,0,1,"メイリオ";
+add_widget 2,"LabelTitle",0,0,640,50,&HFFFFFF,&HFF0000,0,1,0,"Preparations/Registrations",16,0,"メイリオ","",1,1;
+add_widget 2,"LabelTaskID",240,130,120,20,&H000000,&H00D7FF,0,1,0,"Task ID",10,0,"メイリオ","",1,1;
+add_widget 2,"LabelAppDist",240,190,120,20,&H000000,&H00D7FF,0,1,0,"Approach distance",10,0,"メイリオ","",1,1;
+add_widget 2,"LabelGraspID",240,160,120,20,&H000000,&H00D7FF,0,1,0,"Grasp ID",10,0,"メイリオ","",1,1;
+add_widget 5,"NBTaskID",360,130,60,20,&H000000,&HFFFFFF,0,3,0,"NBTaskID",14,0,1,"メイリオ";
+add_widget 5,"NBGraspID",360,160,60,20,&H000000,&HFFFFFF,0,3,0,"NBGraspID",14,0,1,"メイリオ";
+add_widget 5,"NBAppDist",360,190,60,20,&H000000,&HFFFFFF,0,3,4,"NBAppDist",14,0,     50,"メイリオ";
+add_widget 5,"NBBaseGraspID",360,250,60,20,&H000000,&HFFFFFF,0,3,0,"NBBaseGraspID",14,0,1,"メイリオ";
+add_widget 2,"LabelBaseGraspID",240,250,120,20,&H000000,&H00D7FF,0,1,0,"Reference grasp ID",8,0,"メイリオ","",1,1;
+add_widget 2,"LabelPlaceID",240,220,120,20,&H000000,&H00D7FF,0,1,0,"Placement direction ID",8,0,"メイリオ","",1,1;
+add_widget 5,"NBPlaceID",360,220,60,20,&H000000,&HFFFFFF,0,3,0,"NBPlaceID",14,0,1,"メイリオ";
+'<<--TPDESIGNER_RESERVED-->>
+#endif

@@ -1,0 +1,43 @@
+'!TITLE "Workpiece measurement"
+#include "..\RV_API\RV_API.pcs"
+
+Function Main(ByVal task_id As Integer) As Position
+	
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+
+	'Open the communication line
+	ComOpen
+	
+	'Check the vision mode
+	vis_data = QueryMode
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+	vis_mode = GetVisMode(vis_data)
+	If (vis_mode <> VIS_MODE_RUNTIME_) And (vis_mode <> VIS_MODE_GRASP_) Then
+		MsgBox("Vision mode is neither the Run-time nor the Grasp-teaching mode.")
+		Goto finally
+	End If
+	
+'	'Read a task
+'	vis_data = LoadTask(task_id)
+'	vis_status = GetVisStatus(vis_data)
+'	If vis_status <> 0 Then Goto finally
+
+	'Get the workpiece position and posture.
+	vis_data = PoseWork(task_id)
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+	Main = GetWorkPos(vis_data)
+
+finally:
+	'Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then
+		MsgBox("Vision status:" & vis_status)
+	End If
+
+	'Close the communication line
+	ComClose
+	
+End Function

@@ -1,0 +1,149 @@
+#Include <PanelMain.h> raw
+#Include "..\RV_Setup_Main.h"
+
+'****Calibration Process****
+Sub PBStartCalib_CLICKED()
+	' Verify RC8 is in Auto Mode
+	If CurOptMode = 3 Then 
+		If PBStartCalib.Caption = "Start Calib" Then 
+			Kill ..\Functions\StartCalib
+			Delay 500
+			Run ..\Functions\StartCalib(NBTotalCalPoints.Value, NBPalletIndexPos.Value,NBStartFrom.Value)
+			PBStartCalib.Caption = "Cancel" 
+		ElseIf PBStartCalib.Caption = "Cancel" Then 
+			Kill ..\Functions\StartCalib
+			Delay 500
+			PBStartCalib.Caption = "Start Calib"
+		End If
+	Else
+		MsgBox("Invalid Operation: Robot is not in Auto Mode")
+	End If
+End Sub
+
+Sub PBGetPos_CLICKED()
+	Dim tempInt As Integer
+	
+	' Start Index + PointNo Offset
+	tempInt = NBPalletIndexPos+(NBCurCalTeachPoint.Value-1)		
+
+	If CurOptMode = 1 Then 
+		P[tempInt] = CurPos
+		MsgBox("Point No: " + STR(NBCurCalTeachPoint.Value) + " saved on P" + STR(tempInt)) 
+	Else
+		MsgBox("Invalid Operation: Robot is not in Manual Mode")
+	End If 
+End Sub
+
+Sub NBTotalCalPoints_DONE()
+	If (NBTotalCalPoints.Value <> 27) AND (NBTotalCalPoints.Value <> 8)  Then 
+		NBTotalCalPoints.Value = 27
+		MsgBox("Invalid Input: Only 27 and 8 are valid")
+	End If
+
+	' Reset Start From Position
+	NBStartFrom.Value = 1
+End Sub
+
+Sub NBStartFrom_DONE()
+	If NBStartFrom.Value > NBTotalCalPoints.Value Then 
+		MsgBox("Invalid Input: Cannot Start from index larger than total No. of Calib Points")
+	End If
+End Sub
+
+Sub Timer1_TIMER()
+	' Status Label
+	LBLStatusBar.Caption = S[LBSTATUS_CAPTION]		
+
+	'Set Curent Scene Numberic Box
+	NBCurrentSchene.Value = I[NBCURRENT_SCENE]				
+
+	' Start Calib Button
+	PBStartCalib.Caption = S[PBSTART_CAPTION]	
+
+	'Set Pilot Lamps
+	PLSetSceneNo.FG = I[PLSCENE_SET]				' Set Scene No Pilot Lamp
+	PLRobotInMotion.FG = I[PLROBOT_MOTION]			' Robot in Motion Pilot Lamp
+	PLCreatingPointMatrix.FG = I[PLPOINT_MATRIX]	' Creating Point Matrix Pilot Lamp
+	PLPosDataSent.FG = I[PLSCENE_DATA]				' Position Data Sent Pilot Lamp
+
+	' Check if StartCalib program is running
+	If Status(..\Functions\StartCalib) == 3 Then 
+		PBStartCalib.Caption = "Cancel"
+	Else
+		PBStartCalib.Caption = "Start Calib"
+	End If
+End Sub
+
+Sub Panel_INITIALIZE()
+	S[LBSTATUS_CAPTION] = " "			' Status Label
+
+	'Set Numeric Boxes
+	I[NBCURRENT_SCENE] = 0				' Curent Scene Numberic Box
+
+	'Set Push Buttons
+	S[PBSTART_CAPTION] = "Start Calib"	' Start Calib Button
+
+	'Set Pilot Lamps
+	I[PLSCENE_SET] = GRAY				' Set Scene No Pilot Lamp
+	I[PLROBOT_MOTION] = GRAY			' Robot in Motion Pilot Lamp
+	I[PLPOINT_MATRIX] = GRAY			' Creating Point Matrix Pilot Lamp
+	I[PLSCENE_DATA] = GRAY				' Position Data Sent Pilot Lamp
+End Sub
+
+' --- Function Block --- 
+'****Next Button****
+Sub FKDone_CLICKED()
+	page_change RV_Setup_Main
+End Sub
+
+'****Back Button****
+Sub FKBack_CLICKED()
+	page_change RV_Setup_Page1_1
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H00FFFF
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"LBLPosDataSent",40,300,160,20,&HE0FFFF,&H000000,0,1,0,"Position data sent",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title1",0,0,250,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup:",16,2,"Segoe UI","",1,1;
+add_widget 2,"Image2",360,30,260,180,&H000000,&HB0B0B0,0,1,0,"Label2",16,0,"Segoe UI","..\Data\calibPoints.bmp",1,1;
+add_widget 2,"Title2",110,30,240,30,&HFFFFFF,&H000000,0,1,0,"Robot Side",16,2,"Segoe UI","",1,1;
+add_widget 2,"Title3",0,70,340,20,&HE0FFFF,&H000000,0,1,0,"1) Teach the 4 Points (Point 1 closes to robot)",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title4",0,100,280,20,&HE0FFFF,&H000000,0,1,0,"Global Pos Index for Calib Point No.1:",12,2,"Segoe UI","",1,1;
+add_widget 2,"Image1",10,30,110,30,&H000000,&HB0B0B0,0,1,0,"Label9",16,0,"Segoe UI","..\Data\densologo.bmp",1,1;
+add_widget 5,"NBPalletIndexPos",280,100,50,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,10,"Segoe UI";
+add_widget 1,"PBStartCalib",210,220,120,20,&H000000,&HB0B0B0,0,3,1,"Start Calib",12,0,0,"Segoe UI","",1,1;
+add_widget 2,"LBLCalibStatus",0,344,110,20,&HE0FFFF,&H000000,0,1,0,"Calib Status: ",12,2,"Segoe UI","",1,1;
+add_widget 2,"LBLStatusBar",110,340,530,25,&H000000,&HE0FFFF,0,1,0,"",12,2,"Segoe UI","",1,1;
+add_widget 12,"FKDone","Done",2;
+add_widget 2,"LBLSetSceneNo",220,280,130,20,&HE0FFFF,&H000000,0,1,0,"Set Scene No.",12,2,"Segoe UI","",1,1;
+add_widget 3,"PLSetSceneNo",210,280,20,20,&HC0C0C0,&H000000,0,1,2,"",16,0,1,"Segoe UI";
+add_widget 2,"Title6",0,150,210,20,&HE0FFFF,&H000000,0,1,0,"2) Set total Calib Points: ",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBTotalCalPoints",190,150,50,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,27,"Segoe UI";
+add_widget 2,"Title8",0,220,210,20,&HE0FFFF,&H000000,0,1,0,"4) Run Calib Sequence =>",12,2,"Segoe UI","",1,1;
+add_widget 2,"LBLRobotInMotion",40,280,140,20,&HE0FFFF,&H000000,0,1,0,"Robot in motion",12,2,"Segoe UI","",1,1;
+add_widget 3,"PLRobotInMotion",30,280,20,20,&HC0C0C0,&H000000,0,1,2,"",16,0,1,"Segoe UI";
+add_widget 2,"LBLCreatingPointMatrix",220,300,170,20,&HE0FFFF,&H000000,0,1,0,"Creating point matrix",12,2,"Segoe UI","",1,1;
+add_widget 3,"PLCreatingPointMatrix",210,300,20,20,&HC0C0C0,&H000000,0,1,2,"",16,0,1,"Segoe UI";
+add_widget 2,"Title9",10,250,130,20,&HE0FFFF,&H000000,0,1,0,"Current Scene: ",12,2,"Segoe UI","",1,1;
+add_widget 4,"Line1",200,280,0,40,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 3,"PLPosDataSent",30,300,20,20,&HC0C0C0,&H000000,0,1,2,"",16,0,1,"Segoe UI";
+add_widget 5,"NBCurrentSchene",140,250,50,20,&H000000,&HB0B0B0,0,1,0,"NB1",12,0,0,"Segoe UI";
+add_widget 12,"FKBack","Back",1;
+add_widget 2,"Title7",0,180,210,20,&HE0FFFF,&H000000,0,1,0,"3) Start from Scene No.:",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBStartFrom",190,180,50,21,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,1,"Segoe UI";
+add_widget 15,"Timer1",610,-40,0,1,1000;
+add_widget 2,"Title5",0,120,110,20,&HE0FFFF,&H000000,0,1,0,"Calib Point:",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBCurCalTeachPoint",110,120,50,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,1,"Segoe UI";
+add_widget 1,"PBGetPos",170,120,100,20,&H000000,&HB0B0B0,0,3,1,"Get Position",12,0,0,"Tahoma","",1,1;
+'<<--TPDESIGNER_RESERVED-->>
+#endif

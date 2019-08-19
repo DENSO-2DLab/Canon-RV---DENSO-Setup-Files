@@ -1,0 +1,25 @@
+'!TITLE "Denso robot program"
+
+Sub Main
+	
+End Sub
+
+' --- Formats Position Variable into String
+Function Pos2String(Pos As Position) As String
+	Pos2String = STR(PosX(Pos)) & ", " &_
+				 STR(PosY(Pos)) & ", " &_
+				 STR(PosZ(Pos)) & ", " &_
+				 STR(PosRx(Pos)) & ", " &_
+				 STR(PosRy(Pos)) & ", " &_
+				 STR(PosRz(Pos))
+End Function
+
+' --- Gripper State (Depends on Customer End Of Arm Tooling)
+Sub SetGripper(state As Integer)
+	If state = 0 Then				' Enable Gripper				
+	' Add Code to Enable Gripper 
+	ElseIf state = 1 Then 			' Disable Gripper
+	' Add Code to Disable Gripper 
+	End If 
+	Delay 100
+End Sub

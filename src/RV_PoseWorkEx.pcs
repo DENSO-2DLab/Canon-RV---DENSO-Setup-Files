@@ -1,0 +1,70 @@
+'!TITLE "Workpiece measurement (with out-of-motion range check)"
+#Include "RV_API\RV_API.pcs"
+
+#Define PTP_FIG -3
+#Define CP_FIG	-1
+
+Sub Main(ByVal task_id As Integer, ByVal pallet_up_pos As Position, ByVal depart_ht As Position)
+	Dim vis_status As Integer
+	Dim pallet_empty As Integer
+	Dim grasp_candidate_yn As Integer
+	Dim grasp_id As Integer
+	Dim grasp_pos As Position
+	Dim app_pos As Position
+	Dim depart_pos As Position			' Position where robot starts moving to the right above direction, not to the approach direction.
+	Dim vis_data As Variant
+	Dim work_pos As Position
+	Dim app_dist As Double
+	Dim graspInRange As Integer
+	Dim appInRange As Integer
+	Dim depInRange As Integer
+
+	I0 = -1								' Stop Flag
+	P[61] = P(0,0,0,0,0,0,-1)			' Work Pos Global Part Coord
+	P[62] = P(0,0,0,0,0,0,-1)			' Approach Coordinate
+	P[63] = P(0,0,0,0,0,0,-1)			' Pick Coordinate
+	P[64] = P(0,0,0,0,0,0,-1)			' Depart Coordinate
+
+	app_dist = 50						' Get the approach distance
+	vis_data = PoseWork(task_id)		' Execute measurement
+	
+	Do
+		vis_status = GetVisStatus(vis_data) ' Check the status
+		If vis_status <> 0 Then Exit Sub
+
+		'The box is empty, or it is impossible to judge whether the box is empty.
+		pallet_empty = GetPalletEmpty(vis_data)
+		If (pallet_empty = 0) Or (pallet_empty = 65535) Then 
+			I0 = 1
+			Exit Sub
+		End If
+
+		grasp_candidate_yn = GetGraspCandidateYN(vis_data)	' No grasp candidate workpiece exists. 
+		If grasp_candidate_yn = 0 Then Exit Sub
+
+		work_pos = GetWorkPos(vis_data)						' Get the workpiece position. 
+		grasp_id = GetGraspId(vis_data)						' Get the grasp ID.
+		grasp_pos = work_pos
+		LetF grasp_pos = CP_FIG
+		app_pos = DevH(grasp_pos, P(0,0,-app_dist))			' Calculate the approach position
+		LetF app_pos = PTP_FIG
+		depart_pos = grasp_pos								' Calculate the position where robot starts moving to its right above direction
+		LetZ depart_pos = PosZ(depart_ht)
+		LetF depart_pos = CP_FIG
+		
+		graspInRange = OutRange(grasp_pos,1)
+		appInRange = OutRange(app_pos,1)
+		depInRange = OutRange(depart_pos,1)
+
+		'Check the Motion range (grasp, approach, detach position
+		If graspInRange = 0 And appInRange = 0 And depInRange = 0 Then 
+			P[61] = work_pos	
+			P[62] = app_pos
+			P[63] = grasp_pos
+			P[64] = depart_pos
+			Exit Sub
+		End If
+
+		vis_data = PoseNext(task_id)						' Position is out-of-motion range. Get the next grasp candidate with POSE_NEXT
+	Loop
+End Sub

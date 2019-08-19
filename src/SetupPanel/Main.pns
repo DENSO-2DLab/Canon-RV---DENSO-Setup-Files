@@ -1,0 +1,41 @@
+#include <PanelMain.h> raw
+
+Sub PB1_CLICKED()
+	'Calibration Wizard
+	page_change SubPanels\RV_Setup_Main
+End Sub
+
+Sub PB2_CLICKED()
+	'Grasp Data Registration Wizard
+	page_change SubPanels\RV_Grasp_Main
+End Sub
+
+Sub PB3_CLICKED()
+	'Pallet Calibration
+	page_change SubPanels\RV_Pallet_Cal
+End Sub
+
+Sub PB4_CLICKED()
+	'Runtime Testing
+	page_change SubPanels\RV_Runtime_Test
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H00FFFF
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 1,"PB1",30,60,250,130,&H000000,&HB0B0B0,0,3,1,"Robot/Scanner\nCalibration",20,0,0,"Segoe UI";
+add_widget 2,"Label1",10,10,250,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup:",16,2,"Segoe UI","",1,1;
+add_widget 1,"PB2",360,60,250,130,&H000000,&HB0B0B0,0,3,1,"Grasp Data \nRegistration",20,0,0,"Segoe UI";
+add_widget 1,"PB3",30,220,250,130,&H000000,&HB0B0B0,0,3,1,"Pallet / Robot\nCallibration",20,0,0,"Segoe UI";
+add_widget 1,"PB4",360,220,250,130,&H000000,&HB0B0B0,0,3,1,"Runtime \nTest",20,0,0,"Segoe UI";
+'<<--TPDESIGNER_RESERVED-->>
+#endif

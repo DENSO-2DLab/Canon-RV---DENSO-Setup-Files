@@ -1,0 +1,75 @@
+#include <PanelMain.h> raw
+
+#Include "..\RV_Setup_Main.h"
+
+Dim Com_Status As Integer = 0	'Comm Operation Status (1=GOOD, -1=BAD)
+
+'****Test Robot-3DVision Connection****
+Sub PBCON_CLICKED()
+	Dim vis_data As Variant
+	PBSTART.Active = 1		' Disable Next Button
+	PBSTART.Caption = ""	' Show Error
+	
+	On Error GoTo ErrorHandler
+		Com_Status = ComOpen()						' Open the Communication Line
+
+		If Com_Status < 0 Then GoTo ErrorHandler	' ComPort Open Failed Stop Function
+
+		vis_data = VerVision()						' Check current Operation Mode Vision System
+
+		Label4.Caption = vis_data(1)
+		Label6.Caption = vis_data(2)
+
+		PBSTART.Active = 3							' Enable Button
+		PBSTART.Caption = "Start Setup"				' Set Message
+		Label8.BG = &h00FF00						' Green Status
+
+		ComClose									' Close the Communication Line
+
+	Exit Sub
+
+	ErrorHandler:
+		Label4.Caption = "AAA.BBB.CCC"
+		Label6.Caption = "XXXX"
+		PBSTART.Active = 1				' Disable Next Button
+		PBSTART.Caption = "Comm Error"	' Show Error
+		Label8.BG = &h0000FF
+		MsgBox("Not Able to Establish Connection \n Check Network Communication and Retry")
+End Sub
+
+Sub PBSTART_CLICKED()
+	page_change RV_Setup_Page1
+End Sub
+
+Sub FKBack_CLICKED()
+	page_change ..\Main
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H00FFFF
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 7,"Rect1",90,120,430,90,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 2,"Label1",10,10,250,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup:",16,2,"Segoe UI","",1,1;
+add_widget 1,"PBCON",410,50,170,30,&H000000,&HB0B0B0,0,3,1,"Check Connection",12,0,0,"Segoe UI";
+add_widget 2,"Label2",10,50,390,30,&HE0FFFF,&H000000,0,1,0,"1) Press to check communication with scanner --->",12,2,"Segoe UI","",1,1;
+add_widget 2,"Label3",120,140,170,30,&HE0FFFF,&H000000,0,1,0,"Vision version: ",12,2,"Segoe UI","",1,1;
+add_widget 2,"Label4",290,140,210,30,&H00FFFF,&H000000,0,1,0,"AAA.BBB.CCC ",12,2,"Segoe UI","",1,1;
+add_widget 2,"Label5",120,170,170,30,&HE0FFFF,&H000000,0,1,0,"3D Scanner version: ",12,2,"Segoe UI","",1,1;
+add_widget 2,"Label6",290,170,210,30,&H00FFFF,&H000000,0,1,0,"XXXX",12,2,"Segoe UI","",1,1;
+add_widget 2,"Label7",90,90,170,30,&HE0FFFF,&H000000,0,1,0,"Connection Status: ",12,2,"Segoe UI","",1,1;
+add_widget 2,"Label8",250,94,20,20,&HE0FFFF,&H0000FF,0,1,0,"",12,2,"Segoe UI","",1,1;
+add_widget 1,"PBStart",210,280,210,50,&H000000,&HB0B0B0,0,1,1,"",16,0,0,"Segoe UI";
+add_widget 2,"Label9",20,300,170,50,&H000000,&HB0B0B0,0,1,0,"Label9",16,0,"Segoe UI","..\Data\Canon.bmp",1,1;
+add_widget 2,"Label10",460,300,170,50,&H000000,&HB0B0B0,0,1,0,"Label9",16,0,"Segoe UI","..\Data\densologo.bmp",1,1;
+add_widget 12,"FKBack","Back",1;
+'<<--TPDESIGNER_RESERVED-->>
+#endif

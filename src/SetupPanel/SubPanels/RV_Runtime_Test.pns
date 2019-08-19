@@ -1,0 +1,93 @@
+#Include <PanelMain.h> raw
+#Include "..\RV_Setup_Main.h"
+#Include "..\Functions\RuntimeTest.pcs"
+
+Dim pickPartData(3) As Position
+
+' Trigger Scanner + Get Part Data
+Sub PBGetPickData_CLICKED()
+	Call GetPartPosData(NBTaskId.Value, NBAboveBinPos.Value, NBApproachPartDist.Value, pickPartData)
+	
+	' If No Good candidates were found
+	If (I0 = 1) Then 
+		LabelAppPart.Caption = "<value>"
+		LabelPickPart.Caption = "<value>"
+		LabelDepartBin.Caption = "<value>"
+	Else 
+		LabelAppPart.Caption = Pos2String(pickPartData(0))
+		LabelPickPart.Caption = Pos2String(pickPartData(1))
+		LabelDepartBin.Caption = Pos2String(pickPartData(2)) 
+	End If
+End Sub
+
+' Save Data into Global Position Variables
+Sub PBStoreData_CLICKED()
+	P[NBAppPart.Value] = pickPartData(0)
+	P[NBPickPart.Value] = pickPartData(1)
+	P[NBDepartBin.Value] = PickPartData(2)
+
+	If ((P[NBAppPart.Value] = pickPartData(0)) And (P[NBPickPart.Value] = pickPartData(1)) And (P[NBDepartBin.Value] = PickPartData(2))) Then 
+		MsgBox("Data Saved")
+	End If 
+End Sub
+
+' Start RunTime Test
+Sub PBRunTest_CLICKED()
+	If CurOptMode = 3 Then 
+		Run ..\Functions\StartPickRuntime(NBAboveBinPos.Value, NBAppPart.Value, NBPickPart.Value, NBDepartBin.Value)
+	Else
+		MsgBox("Invalid Operation: Robot is not in Auto Mode")
+	End If
+End Sub
+
+' --- Function Keys --- 
+Sub FKBack_CLICKED()
+	page_change ..\Main
+End Sub
+
+Sub PBLoadTask_CLICKED()
+	Call RVLoadTask(NBTaskId.Value)
+	MsgBox("Loaded Task ID" + STR(NBTaskId.Value))
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H000000
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"LBLAboveBinPositionIndex",0,80,210,20,&HE0FFFF,&H000000,0,1,0,"Above Bin Position P No:",12,2,"Segoe UI","",1,1;
+add_widget 2,"LBLTaskID",0,50,210,20,&HE0FFFF,&H000000,0,1,0,"Canon Vision Task ID:",12,2,"Segoe UI","",1,1;
+add_widget 1,"PBGetPickData",70,150,120,30,&H000000,&HB0B0B0,0,3,1,"Get Pick Data",12,0,0,"Segoe UI","",1,1;
+add_widget 2,"Title1",10,10,450,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup: Runtime Test",16,2,"Segoe UI","",1,1;
+add_widget 2,"LBLPosAppPart",0,200,120,20,&HE0FFFF,&H000000,0,1,0,"P[App_Part]: ",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBAboveBinPos",220,80,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,60,"Tahoma";
+add_widget 5,"NBTaskId",220,50,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,2,"Tahoma";
+add_widget 2,"LBLApproachPartDist",0,110,210,21,&HE0FFFF,&H000000,0,1,0,"Approach to part dist (mm):",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBApproachPartDist",220,110,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,50,"Tahoma";
+add_widget 2,"LBLPosPickPart",0,230,120,20,&HE0FFFF,&H000000,0,1,0,"P[Pick_Part]: ",12,2,"Segoe UI","",1,1;
+add_widget 2,"LBLPosDepartBin",0,260,120,20,&HE0FFFF,&H000000,0,1,0,"P[Depart_Bin]: ",12,2,"Segoe UI","",1,1;
+add_widget 4,"Line2",20,222,450,0,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 4,"Line1",20,252,450,0,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 4,"Line3",20,282,450,0,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 2,"LabelAppPart",130,200,340,20,&HE0FFFF,&H000000,0,1,0,"<value>",10,2,"Segoe UI","",1,1;
+add_widget 2,"LabelPickPart",130,230,340,20,&HE0FFFF,&H000000,0,1,0,"<value>",10,2,"Segoe UI","",1,1;
+add_widget 2,"LabelDepartBin",130,260,340,20,&HE0FFFF,&H000000,0,1,0,"<value>",10,2,"Segoe UI","",1,1;
+add_widget 2,"Title2",460,200,120,21,&HE0FFFF,&H000000,0,1,0,"Save to P No:",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBAppPart",590,200,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,61,"Tahoma";
+add_widget 2,"Title3",460,230,120,21,&HE0FFFF,&H000000,0,1,0,"Save to P No:",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBPickPart",590,230,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,62,"Tahoma";
+add_widget 2,"Title4",460,260,120,21,&HE0FFFF,&H000000,0,1,0,"Save to P No:",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBDepartBin",590,260,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,63,"Tahoma";
+add_widget 1,"PBStoreData",70,300,120,30,&H000000,&HB0B0B0,0,3,1,"Store Data",12,0,0,"Segoe UI","",1,1;
+add_widget 1,"PBRunTest",220,300,250,30,&H000000,&HB0B0B0,0,3,1,"Run Test",12,0,0,"Segoe UI","",1,1;
+add_widget 12,"FKBack","Back",1;
+add_widget 1,"PBLoadTask",280,50,110,30,&H000000,&HB0B0B0,0,3,1,"Load Task",12,0,0,"Tahoma","",1,1;
+'<<--TPDESIGNER_RESERVED-->>
+#endif

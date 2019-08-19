@@ -1,0 +1,63 @@
+#Include <PanelMain.h> raw
+#Include "..\RV_Setup_Main.h"
+
+' Move to Calibration Point 
+Sub PBMove_CLICKED()
+	' Verify that Robot is in Auto Mode
+	If CurOptMode = 3 Then 
+		' Start Program
+		Run ..\Functions\PreCalibMove(NBPosNo.Value, NBToolNo.Value)
+	Else
+		MsgBox("Invalid Operation: Robot is not in Auto Mode")
+	End If
+End Sub
+
+' Save Marker Calib for Reference
+Sub PBGetPos_CLICKED()
+		P[NBPosNo.Value] = CurPos
+		MsgBox("Position Saved on Global Position Variable " + STR(NBPosNo.Value))
+End Sub
+
+' --- Function Keys ---
+Sub FKBack_CLICKED()
+	page_change RV_Setup_Page1
+End Sub
+
+Sub FKNext_CLICKED()
+	page_change RV_Setup_Page2
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H00FFFF
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"Title6",100,140,310,30,&HFFFFFF,&H000000,0,1,0,"Vision Side",16,2,"Segoe UI","",1,1;
+add_widget 2,"Title1",4,1,250,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup:",16,2,"Segoe UI","",1,1;
+add_widget 2,"Title7",0,170,410,30,&HE0FFFF,&H000000,0,1,0,"1) Run Pre-Capture Calibration on the Vision Software",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title8",0,200,410,30,&HE0FFFF,&H000000,0,1,0,"2) Drag and Select the area displaying the calibration",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title9",0,230,410,30,&HE0FFFF,&H000000,0,1,0,"     marker within the image.",12,2,"Segoe UI","",1,1;
+add_widget 2,"Image1",10,140,110,30,&H000000,&HB0B0B0,0,1,0,"Label9",16,0,"Segoe UI","..\Data\Canon.bmp",1,1;
+add_widget 2,"Title10",0,260,410,30,&HE0FFFF,&H000000,0,1,0,"3) Capture parameter adjustment",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title11",0,290,410,30,&HE0FFFF,&H000000,0,1,0,"4) Open Calibration Marker Caputre and Detection",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title12",0,320,410,30,&HE0FFFF,&H000000,0,1,0,"     Window",12,2,"Segoe UI","",1,1;
+add_widget 12,"FKNext","Next",2;
+add_widget 2,"Image2",420,140,210,210,&H000000,&HB0B0B0,0,1,0,"Label2",16,0,"Segoe UI","..\Data\canon_postcalibration.bmp",1,1;
+add_widget 12,"FKBack","Back",1;
+add_widget 2,"Title5",0,80,360,20,&HE0FFFF,&H000000,0,1,0,"Save current position as Calib. Marker Position",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBPosNo",210,50,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,1,"Tahoma";
+add_widget 1,"PBMove",380,50,60,20,&H000000,&HB0B0B0,0,3,1,"Move",12,0,0,"Tahoma","",1,1;
+add_widget 2,"Title3",0,50,210,20,&HE0FFFF,&H000000,0,1,0,"Calib Marker Position No.",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title2",0,30,480,20,&HE0FFFF,&H000000,0,1,0,"Place the calibration marker within the measurement area.",12,2,"Segoe UI","",1,1;
+add_widget 1,"PBGetPos",350,80,100,20,&H000000,&HB0B0B0,0,3,1,"Get Position",12,0,0,"Tahoma","",1,1;
+add_widget 2,"Title4",250,50,90,20,&HE0FFFF,&H000000,0,1,0,"Tool No:",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBToolNo",340,50,30,20,&H000000,&HB0B0B0,0,3,0,"NB1",12,0,1,"Tahoma";
+'<<--TPDESIGNER_RESERVED-->>
+#endif

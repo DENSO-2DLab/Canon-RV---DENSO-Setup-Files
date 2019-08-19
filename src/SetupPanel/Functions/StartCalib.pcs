@@ -1,0 +1,244 @@
+'!TITLE "Denso robot program"
+
+#Include "..\RV_Setup_Main.h"
+
+Sub Main(ByVal NoOfPoints As Integer, ByVal PIndex As Integer, ByVal PStartFrom As Integer)
+	Dim fResult As Integer = 0
+	Dim CurMarker As Integer = 1
+	Dim TotalMarker As Integer
+	Dim PalletIndex As Integer
+
+	'PB1.Caption = "Running.." (For Panel)
+	S[PBSTART_CAPTION] = "Running.."
+
+	'****Set Number of Point to Use for Calibration (8 or 27)****
+	S[LBSTATUS_CAPTION] = "Set Number of Points for Calibration"	' Panel Flag
+	I[PLSCENE_SET] = RED											' Panel Flag: Set to Red Scene Set Pilot Light
+	
+	If (NoOfPoints <> 27) AND (NoOfPoints <> 8) Then NoOfPoints = 27
+	Call RV_ReadyCalib(NoOfPoints)
+	
+	I[PLSCENE_SET] = GREEN														' Panel Flag: Set to Green Scene Set Pilot Light
+	S[LBSTATUS_CAPTION] = "Calculate Calibration Points out of 4 tought Points"	' Panel Flag
+	
+	'****Calculate Point Data****
+	Call PointCreate(NoOfPoints, PIndex)
+	
+	If IO[129] = ON Then GoTo Finally						' Check if program finished successfully	
+	
+	I[PLPOINT_MATRIX] = GREEN								' Panel Flag: Enable Creating Point Matrix!
+	S[LBSTATUS_CAPTION] = " Start Scene/Point Calibration "	' Panel Flag
+
+	'****Robot Camera Calibration Sequence****	
+	TotalMarker = NoOfPoints
+	PalletIndex = PIndex + 5
+
+	For CurMarker = PStartFrom-1 To TotalMarker-1
+		I[NBCURRENT_SCENE] = CurMarker			' Panel Flag
+		I[PLSCENE_DATA] = GRAY					' Panel Flag: Set Gray Color
+		fResult = 0
+
+		'****ROBOT MOTION****
+		I[PLROBOT_MOTION] = GREEN				' Panel Flag: Set Green Color
+		Reset IO[128]
+		Call PointCalibMove(PalletIndex + CurMarker)
+		S[LBSTATUS_CAPTION] = "Moving To Point" ' Panel Flag
+		
+		I[PLROBOT_MOTION] = GRAY				' Panel Flag: Set Gray Color
+		
+		If IO[129] = ON Then GoTo Finally		' Check if program finished successfully	
+	
+		I[PLSCENE_DATA] = YELLOW						' Panel Flag: Set Yellow Color
+		S[LBSTATUS_CAPTION] = "Sending Position Data" 	' Panel Flag
+		
+		'****SEND CURRENT POS TO VISION SYSTEM****
+		Call RV_CalibMarker(CurMarker)			' Send Current Scene and Position Data to Canon Scanner
+		
+		If IO[129] = ON Then GoTo Finally		' Check if program finished successfully	
+		I[PLSCENE_DATA] = GREEN					' Panel Flag: Set Green Color
+
+		PalletIndex = PalletIndex + 1 
+	Next CurMarker
+
+Finally:
+	S[LBSTATUS_CAPTION] = "Calibration Process Failed"	' Panel Flag
+	S[PBSTART_CAPTION] = "Start Calib"					' Panel Flag
+End Sub
+
+Sub PointCreate(ByVal tPoints As Integer, ByVal PIndex As Integer)
+	' Layer Variables
+	Dim LayerCount As Integer = 1
+	Dim LayerHeight As Single
+	Dim TotalLayer As Integer
+
+	' Pallet Variables
+	Dim Pallet_P1 As Position
+	Dim Pallet_P2 As Position
+	Dim Pallet_P3 As Position
+	Dim Pallet_P4 As Position
+	Dim Pallet_P1_BL As Position
+	Dim PalletRow As Integer
+	Dim PalletColumn As Integer
+	Dim PalletCount As Integer = 1
+
+	RESET IO[129]	' Reset Error Flag
+
+	' Pallet Points 
+	Pallet_P1 = P[PIndex]			' Corner 1 Top Layer
+	Pallet_P2 = P[PIndex + 1]		' Corner 2 Top Layer
+	Pallet_P3 = P[PIndex + 2]		' Corner 3 Top Layer
+	Pallet_P1_BL = P[PIndex + 3]	' Corner 1 Bottom Layer 
+
+	' Find 4th Corner Top Layer
+	Pallet_P4 = P[PIndex]
+	LetX Pallet_P4 = PosX(Pallet_P3)
+	LetY Pallet_P4 = PosY(Pallet_P2)
+
+	' Set Pallet Information Depending on Calibration Type 
+	Select Case tPoints
+		Case 8
+			PalletRow = 2		' Set Number of Rows
+			PalletColumn = 2	' Set Number of Columns
+			TotalLayer	= 2		' Set Total Layers	
+		
+		Case 27 
+			PalletRow = 3		' Set Number of Rows
+			PalletColumn = 3	' Set Number of Columns
+			TotalLayer = 3		' Set Total Layers 
+		
+		Case Else 				' Default to 27 Points
+			PalletRow = 3		' Set Number of Rows
+			PalletColumn = 3	' Set Number of Columns
+			TotalLayer = 3		' Set Total Layers 
+	End Select 
+
+	' Set Layer Height	
+	LayerHeight = (PosZ(Pallet_P1) - PosZ(Pallet_P1_BL)) / (TotalLayer - 1)
+
+	' Set Pallet Layer 0 Height
+	LetZ Pallet_P1 = PosZ(Pallet_P1_BL)
+	LetZ Pallet_P2 = PosZ(Pallet_P1_BL)
+	LetZ Pallet_P3 = PosZ(Pallet_P1_BL)
+	LetZ Pallet_P4 = PosZ(Pallet_P1_BL)
+
+	' Populate Points
+	On Error GoTo ErrorHandler 
+		PIndex = PIndex + 5	' Shift Start Position. This will be the starting point 
+							' To save pallet points
+		
+		For LayerCount = 1 To TotalLayer
+			For PalletCount = 1 To PalletRow*PalletColumn
+				P[PIndex] = Pallet.CalcPos(PalletRow,PalletColumn,LayerHeight,Pallet_P1, Pallet_P2, Pallet_P3, Pallet_P4,PalletCount, LayerCount)
+				LetF P[PIndex] = -2
+				PIndex = PIndex + 1 
+			Next PalletCount
+		Next LayerCount
+
+		SET IO[128]
+	Exit Sub	
+
+	ErrorHandler:
+		SET IO[129]
+End Sub
+
+' --- Move Robot To Scene Point ---
+Sub PointCalibMove(ByVal Point As Integer)
+	Reset IO[129]		' Reset Error Flag
+	
+	TakeArm
+	Motor On
+	Speed 30
+	ChangeTool 1 
+
+	On Error GoTo ErrorHandler
+		Move P, P[Point]
+		Set IO[128]
+	Exit Sub
+
+	ErrorHandler:
+		Set IO[129]
+End Sub
+
+' --- Start Canon Scanner Calibration Mode --- 
+Sub RV_ReadyCalib(ByVal scene_num As Integer)
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+	Dim com_status AS Integer
+
+	Reset IO[128]							' Reset Task Complete Flag 
+	Reset IO[129]							' Reset TaskErro Flag
+
+	com_Status = ComOpen()					' Open the communication line
+
+	If com_Status = -1 Then 
+		Set IO[129]
+		GoTo Finally
+	End If 
+	
+	vis_data = QueryMode()					' Check Current Operation Mode Vision System
+	vis_status = GetVisStatus(vis_data)		' Check for Version Number of Vision System
+
+	If vis_status <> 0 Then Goto Finally	' Vision System Version Non Existent
+	vis_mode = GetVisMode(vis_data)			' Extract Vision Mode Value
+
+	' Check that Vision System is in Calibration Mode before continuing
+	If (vis_mode <> VIS_MODE_CALIB_) And (vis_mode <> VIS_MODE_CALIB_CHECK_) Then
+		MsgBox("Vision mode is not the Calibration mode.")
+		Set IO[129]	'Error
+		Goto Finally
+	End If
+
+	' Set the scene number
+	vis_data = ReadyCalib(scene_num)		' Set number of Points to use for Calibration
+	vis_status = GetVisStatus(vis_data)		' Check for Version Number of Vision System
+	
+Finally:
+	' Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then 
+		MsgBox("Vision status:" & vis_status)
+		Set IO[129]							' Error
+	End If
+
+	Call ComClose()							' Close the communication line
+	Set IO[128]
+End Sub
+
+Sub RV_CalibMarker(ByVal scene_index As Integer)
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+
+	Reset IO[128]		' Reset Task Done Flag
+	Reset IO[129]		' Reset Error Flag
+
+	Call ComOpen()							' Open the communication line
+	
+	vis_data = QueryMode					' Check Current Operation Mode Vision System
+	vis_status = GetVisStatus(vis_data)		' Check for Version Number of Vision System
+	
+	If vis_status <> 0 Then Goto Finally	' Vision System Version Non Existent
+	vis_mode = GetVisMode(vis_data)			' Extract Vision Mode Value
+
+	' Check that Vision System is in Calibration Mode before continuing
+	If (vis_mode <> VIS_MODE_CALIB_) And (vis_mode <> VIS_MODE_CALIB_CHECK_) Then
+		MsgBox("Vision mode is not the Calibration mode.")
+		Set IO[129]
+		Goto Finally
+	End If
+
+	' Marker measurement
+	vis_data = CalibMarker(scene_index, PVec(CurPos))	' Send Current Position To Vision System
+	vis_status = GetVisStatus(vis_data)					' Vision System Version Non Existent
+	If vis_status <> 0 Then Goto Finally
+	
+Finally:
+	'Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then 
+		MsgBox("Vision status:" & vis_status)
+		Set IO[129]
+	End If 
+
+	Call ComClose()										' Close the communication line
+	Set IO[128]
+End Sub

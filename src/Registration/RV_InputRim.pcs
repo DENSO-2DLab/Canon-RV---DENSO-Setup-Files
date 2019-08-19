@@ -1,0 +1,37 @@
+'!TITLE "Registration of the pin position for the pallet flat surface calculation"
+#include "..\RV_API\RV_API.pcs"
+
+Sub Main(ByVal scene_index As Integer)
+
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+
+	'Open the communication line
+	ComOpen
+	
+	'Check the vision mode
+	vis_data = QueryMode
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+	vis_mode = GetVisMode(vis_data)
+	If vis_mode <> VIS_MODE_PALLET_ Then
+		MsgBox("Vision mode is not the Pallet flat surface calculation mode.")
+		Goto finally
+	End If
+
+	'Set the scene number
+	vis_data = InputRim(scene_index, PVec(CurPos))
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+
+finally:
+	'Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then
+		MsgBox("Vision status:" & vis_status)
+	End If
+
+	'Close the communication line
+	ComClose
+
+End Sub

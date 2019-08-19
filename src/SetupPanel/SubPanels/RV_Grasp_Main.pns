@@ -1,0 +1,91 @@
+#Include <PanelMain.h> raw
+#Include "..\RV_Setup_Main.h"
+#Include "..\Functions\StartGraspReg.pcs"
+#Include "..\Functions\PickPointReg.pcs"
+
+' --- Get Part Point ---
+' Returns the part center coordinate data
+Sub PBScanTrigger_CLICKED()
+	Call StartGraspReg(NBTaskID.Value, NBGraspID.Value)
+End Sub
+
+' --- Get Pick Point ---
+' Returns the coordinate data where the robot
+' should move in order to pick part
+Sub PBSendGraspPos_CLICKED()
+	If PLPartFound.FG = GREEN Then 
+		Call PickPointReg(NBAppDist.Value, CBCurPos.State)
+	Else
+		MsgBox("Cannot Execute until a part is found")
+	End If 
+End Sub
+
+' --- Move to Pick ---
+Sub PBMove2Pick_CLICKED()
+	If (PLApproachOK.FG = GREEN) Then
+		If CurOptMode = 3 Then 
+			Run StartPick
+		Else
+			MsgBox("Invalid Operation: Robot is not in Auto Mode")
+		End If
+	Else
+		MsgBox("Cannot Execute until Approach is OK")
+	End If 
+End Sub
+
+' --- Update Status ---
+Sub Timer1_TIMER()
+	PLPartFound.FG = I[PLPART_FOUND]						' Set Part Found Light
+	PLApproachOK.FG = I[PLAPP_OK]							' Approach OK Light
+
+	LBLPartPoint.Caption = "Part: " & S[LBPART_FOUND_COORD]	' Part Found Point Coordinate
+	LBLPickPoint.Caption = "Part: " & S[LBPICK_COORD]		' Pick Point Coordinate
+End Sub
+
+' --- Function Keys ---
+Sub FKDone_CLICKED()
+	page_change ..\Main
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H00FFFF
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"Arrow3",180,206,30,34,&H000000,&HB0B0B0,0,1,0,"Label2",16,0,"Segoe UI","..\Data\blue_arrow.bmp",1,1;
+add_widget 2,"Title1",10,10,450,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup: Grasp Data Registration",16,2,"Segoe UI","",1,1;
+add_widget 2,"Arrow1",180,68,30,32,&H000000,&HB0B0B0,0,1,0,"Label2",16,0,"Segoe UI","..\Data\blue_arrow.bmp",1,1;
+add_widget 2,"Title2",0,40,390,30,&HE0FFFF,&H000000,0,1,0,"1) Place work within the measurment area ",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title3",0,99,390,24,&HE0FFFF,&H000000,0,1,0,"2) Measure the position and pose of the work",12,2,"Segoe UI","",1,1;
+add_widget 2,"Arrow2",180,150,30,34,&H000000,&HB0B0B0,0,1,0,"Label2",16,0,"Segoe UI","..\Data\blue_arrow.bmp",1,1;
+add_widget 1,"PBScanTrigger",40,130,120,22,&H000000,&HB0B0B0,0,3,1,"Trigger Scanner",12,0,0,"Segoe UI","",1,1;
+add_widget 2,"Title4",180,130,130,20,&HE0FFFF,&H000000,0,1,0,"Part Found?:",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title7",40,260,220,20,&H000000,&H00D7FF,0,1,0,"Pick Approach Distance (mm)",12,0,"Segoe UI","",1,1;
+add_widget 5,"NBAppDist",290,260,60,20,&H000000,&HFFFFFF,0,3,4,"NBAppDist",14,0,    300,"Segoe UI";
+add_widget 2,"LBLPickPoint",10,290,460,30,&HE0FFFF,&H000000,0,1,0,"+ Pick Point:",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title6",0,235,390,19,&HE0FFFF,&H000000,0,1,0,"4) Get Approach and Target Position of found Part",12,2,"Segoe UI","",1,1;
+add_widget 4,"Line2",40,320,430,0,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 1,"PBSendGraspPos",360,260,66,22,&H000000,&HB0B0B0,0,3,1,"Send",12,0,0,"Segoe UI","",1,1;
+add_widget 1,"PBMove2Pick",30,330,120,20,&H000000,&HB0B0B0,0,3,1,"Move to Pick",12,0,0,"Segoe UI","",1,1;
+add_widget 3,"PLPartFound",290,130,20,20,&HC0C0C0,&H000000,0,1,2,"",16,0,1,"Segoe UI";
+add_widget 2,"LBLTaskID",230,70,70,20,&HFFFFFF,&H000000,0,1,0,"TaskID: ",12,2,"Segoe UI","",1,1;
+add_widget 5,"NBTaskID",301,70,37,20,&H000000,&HFFFFFF,0,3,4,"NBAppDist",14,0,      1,"Segoe UI";
+add_widget 5,"NBGraspID",434,70,37,20,&H000000,&HFFFFFF,0,3,4,"NBAppDist",14,0,      1,"Segoe UI";
+add_widget 2,"LBLGraspID",350,70,80,20,&HFFFFFF,&H000000,0,1,0,"GraspID: ",12,2,"Segoe UI","",1,1;
+add_widget 15,"Timer1",610,-40,0,1,1000;
+add_widget 2,"LBLPartPoint",320,130,310,20,&HE0FFFF,&H000000,0,1,0,"Part Point:",12,2,"Segoe UI","",1,1;
+add_widget 4,"Line1",340,150,290,0,&HFFFFFF,&HB0B0B0,0,1,0,1;
+add_widget 2,"Title8",480,300,140,20,&HE0FFFF,&H000000,0,1,0,"Approach OK?:",12,2,"Segoe UI","",1,1;
+add_widget 3,"PLApproachOK",610,300,20,20,&HC0C0C0,&H000000,0,1,2,"",16,0,1,"Segoe UI";
+add_widget 10,"CBCurPos",516,260,90,20,&HFFFFFF,&H000000,0,3,0,"CurPos",12,0,1,"Tahoma";
+add_widget 12,"FKDone","Done",2;
+add_widget 2,"Title5",0,183,390,20,&HE0FFFF,&H000000,0,1,0,"3) Move Robot Arm to Grasp Position. ",12,2,"Segoe UI","",1,1;
+'<<--TPDESIGNER_RESERVED-->>
+#endif

@@ -1,0 +1,12 @@
+'!TITLE "Denso robot program"
+
+Sub Main(ByVal CalibPos As Integer, ByVal CalibTool As Integer)
+	Motor On				' Turn On Motor Power
+	Takearm 0
+
+	ChangeTool CalibTool	' Set Tool Offset for Calibration Jig
+	Move P, @E P[CalibPos]	' Move to Pre Calibration Position
+	Motor Off
+	
+	MsgBox("Robot Within the Measurement Area")
+End Sub

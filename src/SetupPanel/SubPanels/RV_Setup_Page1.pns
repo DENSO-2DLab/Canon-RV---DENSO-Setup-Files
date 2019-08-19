@@ -1,0 +1,34 @@
+#include <PanelMain.h> raw
+#Include "..\RV_Setup_Main.h"
+
+' --- Function Keys ---
+Sub FKBack_CLICKED()
+	page_change RV_Setup_Main
+End Sub
+
+Sub FKNext_CLICKED()
+	page_change RV_Setup_Page1_1
+End Sub
+#ifdef TP_DESIGNER
+'<<--TPDESIGNER_RESERVED-->>
+CAPTION=""
+BG=&H000000
+FG=&H00FFFF
+TIMEOUT=2000
+TIMEOUTMODE=1
+RELEASEMODE=0
+PNLCCVER=232
+COLORTYPE=1
+FONTTYPE=1
+BORDERSTYLE=0
+CONTROLSORT=0
+add_widget 2,"Title2",100,40,310,30,&HFFFFFF,&H000000,0,1,0,"Robot Side",16,2,"Segoe UI","",1,1;
+add_widget 2,"Title1",4,1,250,30,&H00FFFF,&H000000,0,1,0,"3D Bin Picking Setup:",16,2,"Segoe UI","",1,1;
+add_widget 2,"Label2",420,50,200,260,&H000000,&HB0B0B0,0,1,0,"Label2",16,0,"Segoe UI","..\Data\canon_marker.bmp",1,1;
+add_widget 2,"Title3",0,70,410,50,&HE0FFFF,&H000000,0,1,0,"1) Intall calibration marker.\nSet Tool 1 Offset",12,2,"Segoe UI","",1,1;
+add_widget 2,"Title4",0,120,410,30,&HE0FFFF,&H000000,0,1,0,"2) Move the robot within the center measurement area.",12,2,"Segoe UI","",1,1;
+add_widget 2,"Image1",10,40,110,30,&H000000,&HB0B0B0,0,1,0,"Label9",16,0,"Segoe UI","..\Data\densologo.bmp",1,1;
+add_widget 12,"FKNext","Next",2;
+add_widget 12,"FKBack","Back",1;
+'<<--TPDESIGNER_RESERVED-->>
+#endif

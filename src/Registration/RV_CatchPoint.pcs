@@ -1,0 +1,71 @@
+'!TITLE "Grasp information registration"
+#include "..\RV_API\RV_API.pcs"
+
+Sub Main(ByVal task_id As Integer, _
+		 ByVal grasp_id As Integer, _
+		 ByVal app_dist As Double, _
+		 ByVal work_pos As Position, _
+		 ByVal place_id As Integer _
+)
+	
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+	Dim grasp_pos As Position
+
+	
+	'Open the communication line
+	ComOpen
+	
+	'Check the vision mode
+	vis_data = QueryMode
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+	vis_mode = GetVisMode(vis_data)
+	If vis_mode <> VIS_MODE_GRASP_ Then
+		MsgBox("Vision mode is not the Grasp-teaching mode.")
+		Goto finally
+	End If
+
+	'Grasp information registration
+	vis_data = CatchPoint(task_id, grasp_id, ToolPos(CurTool), DevH(CurPos, P(0,0,-app_dist)), CurPos)
+	
+	P[80] = work_pos
+	P[81] = ToolPos(CurTool)
+	P[82] = DevH(CurPos, P(0,0,-app_dist))
+	P[83] = CurPos
+	vis_status = GetVisStatus(vis_data)
+	If vis_status <> 0 Then Goto finally
+
+	'Convert data from Base coordinate system to Work coordinate system 
+	grasp_pos = ConvertPosWork(CurPos, 0, work_pos)
+	P[84] = grasp_pos
+
+	'Save data in the controller
+	'Call SaveDataCP(task_id, grasp_id, grasp_pos, app_dist, CurTool, place_id)
+
+finally:
+	'Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then
+		MsgBox("Vision status:" & vis_status)
+	End If
+
+	'Close the communication line
+	ComClose
+	
+End Sub
+
+'Save data in the controller (Task ID, Grasp position, Approach distance, Tool number)
+Sub SaveDataCP( _
+	ByVal task_id As Integer, _
+	ByVal grasp_id As Integer, _
+	ByVal grasp_pos As Position, _
+	ByVal app_dist As Double, _
+	ByVal tool_index As Integer, _
+	ByVal place_id As Integer _
+)
+	SetPublicValue grasp_pos, "RV_Data", "grasp_pos", task_id, grasp_id
+	SetPublicValue app_dist, "RV_Data", "app_dist", task_id
+	SetPublicValue tool_index, "RV_Data", "tool_index", task_id
+	SetPublicValue place_id, "RV_Data", "place_id", task_id, grasp_id
+End Sub

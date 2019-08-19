@@ -1,0 +1,25 @@
+'!TITLE "Denso robot program"
+#Include "..\RV_Setup_Main.h"
+
+Sub Main(ByVal appBin As Integer, ByVal appPart As Integer, ByVal pickPart As Integer, ByVal depBin As Integer)
+	TakeArm
+	ChangeTool 2 			' Set the Tool Offset
+	SingularAvoid(2) 		' Enable Singular Avoidance
+	
+	Move P, @P J0 			' Home Position 
+	Call SetGripper(0) 		' Vacuum Off
+	
+	Move P, @P P[appBin] 	' Move to Above Bin Position
+	
+	Move P, @P P[appPart] 	' Approach Part inside Bin
+	Move L, @C P[pickPart] 	' Move to Pick
+	Call SetGripper(1) 		' Vaccum On
+	Move L, @P P[depBin] 	' Depart from bin (linearly)
+	
+	Move P, @P P[appBin] 	' Move to Above Bin Position
+	Call SetGripper(0) 		' Vacuum Off
+	
+	Move P, @P J0 			' Home Position
+	
+	SingularAvoid(0) 		' Disable Singular Avoidance
+End Sub

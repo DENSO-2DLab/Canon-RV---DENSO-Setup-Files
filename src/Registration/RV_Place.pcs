@@ -1,0 +1,19 @@
+'!TITLE "Placement direction registration"
+#include "..\RV_API\RV_API.pcs"
+
+Sub Main(ByVal task_id As Integer, ByVal place_id As Integer, ByVal base_grasp_id As Integer)
+	
+	Call SaveDataP(task_id, place_id, base_grasp_id, CurPos)
+
+End Sub
+
+'Save data in the controller (Placement direction ID, Reference Grasp ID, Placement position)
+Sub SaveDataP( _
+	ByVal task_id As Integer, _
+	ByVal place_id As Integer, _
+	ByVal base_grasp_id As Integer, _
+	ByVal place_pos As Position _
+)
+	SetPublicValue base_grasp_id, "RV_Data", "base_grasp_id", task_id, place_id
+	SetPublicValue place_pos, "RV_Data", "place_pos", task_id, place_id
+End Sub

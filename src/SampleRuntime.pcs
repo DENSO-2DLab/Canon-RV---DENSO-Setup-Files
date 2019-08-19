@@ -1,0 +1,45 @@
+'!TITLE "Denso robot program"
+#Include "RV_PoseWorkEx.pcs"
+#Include ".\SetupPanel\Functions\PublicFunctions.pcs"
+
+Sub Main
+	TakeArm
+	ChangeTool 2				' Set the Tool Offset
+	Move P, @P J0, Next			' Home Position 
+	Call SetGripper(0)			' Vacuum Off
+	
+	Randomize(Timer)			' Set Random Generator
+
+	Call RV_PoseWorkEx(4, P60, P70)	' Scan Bin
+	
+	Do
+		If (I0 = 1) Then 
+			MsgBox("Bin is Empty")
+			Exit Sub
+		End If
+
+		If (PosZ(P61) = 0) Then 
+			MsgBox("No Parts Available to Pick")
+			Exit Sub
+		End If
+	
+		' Pick Part Motion
+		Move P, @P P60			' Move to Top of Pallet
+		
+		Move P, @P P62			' Approach Coordinate
+		SingularAvoid 2			' Set Singularity Avoidance
+		Move L, @C P63			' Part Coordinate
+		Call SetGripper(1)		' Vacuum On
+		Move L, @P P64			' Depart Coordinate
+		SingularAvoid 0			' Set Singularity Avoidance 
+			
+		' Place Part Motion
+		Move P, @C P[48+(3*rnd)], Next	' Move To Pick Position
+		Arrive 75
+		Run RV_PoseWorkEx(4, P60, P70)
+		Arrive 100
+		Call SetGripper(0)			' Vacuum Off
+	Loop
+	
+	SingularAvoid 0
+End Sub

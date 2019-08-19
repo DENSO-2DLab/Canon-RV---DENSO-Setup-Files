@@ -1,0 +1,456 @@
+'!TITLE "RV Function API"
+
+#Include"RV_API.h"
+
+'========================================================================================
+'Initialization / Close
+'========================================================================================
+
+'Open the communication line
+Function ComOpen() As Integer
+	Comm.Close COM_INDEX_		'Close Comm Port
+
+	On Error GoTo finally
+	    If Comm.State(COM_INDEX_) = 0 Then
+			Comm.Open COM_INDEX_
+		End If	
+		ComOpen = SUCCEEDED		' Comm Port Successfully Open
+		Exit Function
+	finally:
+		MsgBox("Communication connection error. Revise the connection.")
+		ComOpen = FAILED			' Comm Por Failed to Open
+End Function
+
+'Close the communication line
+Sub ComClose
+	Comm.Close COM_INDEX_
+End Sub
+
+'========================================================================================
+'Reception/Transmisison
+'========================================================================================
+Function SendRecv(ByVal send As String) As String
+	Dim command As Variant
+
+	On Error GoTo ErrorHandler
+		Call ComOpen							' Open Comm Port
+	
+		Comm.Output COM_INDEX_, send			' Send String Message to PC
+		SendRecv = Comm.Input(COM_INDEX_)		' Wait for Message Response
+		command = Split(send,",")				' Parse Message Response
+		SendRecv = command(0) & "," & SendRecv	' Format Return Variable
+
+		Call ComClose							' Close Comm Port
+		Exit Function							
+	ErrorHandler: 
+		PrintMsg Now & "- " & err.OriginalNumber &": " & err.Description
+End Function
+
+'========================================================================================
+'Data acquisition
+'========================================================================================
+
+'****Vision status****
+Function GetVisStatus(ByVal data As Variant) As Integer
+	If data(0) = "VER_VISION" Then
+		GetVisStatus = 0
+	Else
+		GetVisStatus = data(1)
+	End If
+End Function
+
+'Task ID
+Function GetTaskId(ByVal data As Variant) As Integer
+
+	If data(0) = "LOAD_TASK" Or _
+	   data(0) = "FREE_TASK" Or _
+	   data(0) = "POSE_PALLET" Or _
+	   data(0) = "POSE_WORK" Or _
+	   data(0) = "POSE_NEXT" Or _
+	   data(0) = "CATCH_POINT" Then
+		GetTaskId = data(2)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Pallet position and posture
+Function GetPalletPos(ByVal data As Variant) As Position
+
+	If data(0) = "POSE_PALLET" Then
+		LetX GetPalletPos = data(3)
+		LetY GetPalletPos = data(4) 
+		LetZ GetPalletPos = data(5) 
+		LetRx GetPalletPos = data(6) 
+		LetRy GetPalletPos = data(7) 
+		LetRz GetPalletPos = data(8)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Pallet empty information
+Function GetPalletEmpty(ByVal data As Variant) As Integer
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		GetPalletEmpty = data(3)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If 
+
+End Function
+
+'Check if there is any grasp candidate workpiece
+Function GetGraspCandidateYN(ByVal data As Variant) As Integer
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		GetGraspCandidateYN = data(4)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Score
+Function GetScore(ByVal data As Variant) As Integer
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		GetScore = data(5)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Grasp ID
+Function GetGraspID(ByVal data As Variant) As Integer
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		GetGraspID = data(6)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Workpiece position and posture
+Function GetWorkPos(ByVal data As Variant) As Position
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		LetX GetWorkPos = data(7)
+		LetY GetWorkPos = data(8)
+		LetZ GetWorkPos = data(9)
+		LetRx GetWorkPos = data(10)
+		LetRy GetWorkPos = data(11)
+		LetRz GetWorkPos = data(12)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Shielding ratio (100 times of actual value)
+Function GetOcclusionRatio(ByVal data As Variant) As Integer
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		GetOcclusionRatio = data(13)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Numbers of the locally higher points
+Function GetNumLocallyHighPos(ByVal data As Variant) As Integer
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		GetNumLocallyHighPos = data(14)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Position of the locally higher point (Index is 0 to 4)
+Function GetLocallyHighPos(ByVal data As Variant, ByVal index As Integer) As Vector
+
+	If 0 > index Or index > 4 Then
+		MsgBox("Input data is incorrect.")
+	End If
+
+	If data(0) = "POSE_WORK" Or data(0) = "POSE_NEXT" Then
+		LetX GetLocallyHighPos = data(15 + (index * 3) + 1)
+		LetY GetLocallyHighPos = data(15 + (index * 3) + 2)
+		LetZ GetLocallyHighPos = data(15 + (index * 3) + 3)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Scene number
+Function GetSceneIndex(ByVal data As Variant) As Integer
+
+	If data(0) = "CALIB_MARKER" Or data(0) = "INPUT_RIM" Then
+		GetSceneIndex = data(2)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'Vision software version
+Function GetVisVer(ByVal data As Variant) As String
+
+	If data(0) = "VER_VISION" Then
+		GetVisVer = data(1)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'3D scanner version
+Function GetScannerVer(ByVal data As Variant) As String
+
+	If data(0) = "VER_VISION" Then
+		GetScannerVer = data(2)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'****Vision mode****
+'Description:	Extracts Vision Mode Number from QUERY_MODE Array
+'Return:		0) Runtime
+'				1) PRESETUP (RV Calibration)
+'				2) PRESETUP (RV Calibration Check)
+'				3) PRESETUP (RV Grasp Data Registration)
+'				4) PRESETUP (Other)
+'				5) PRESETUP (Pallet Area Estimation)
+'				6) PRESETUP	(System Upward Direction Teaching)
+'				7) PRESETUP (Registered the Marker to monitor offset of the distance measurement
+'				8) PRESETUP (Measuring the offset amount of the distance measurement
+Function GetVisMode(ByVal data As Variant) As Integer
+	If data(0) = "QUERY_MODE" Then
+		GetVisMode = data(2)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+End Function
+
+'3D scanner ID
+Function ScannerID(ByVal data As Variant) As Integer
+
+	If data(0) = "SCANNER_POS" Then
+		ScannerID = data(2)
+	Else
+		MsgBox("Input data is incorrect.")
+	End If
+
+End Function
+
+'========================================================================================
+'RV API Function(For function details, refer to Cannon-RV series manual.)
+'========================================================================================
+
+'Read a task
+Function LoadTask(ByVal task_id As Integer) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("LOAD_TASK,%d", task_id)
+	recv = SendRecv(send)
+	LoadTask = Split(recv,",")
+
+End Function
+
+'Release a task
+Function FreeTask(ByVal task_id As Integer) As Variant
+	
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("FREE_TASK,%d", task_id)
+	recv = SendRecv(send)
+	FreeTask = Split(recv,",")
+
+End Function
+
+'Measurement and acquisition of pallet position
+Function PosePallet(ByVal task_id As Integer) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("POSE_PALLET,%d", task_id)
+	recv = SendRecv(send)
+	PosePallet = Split(recv,",")
+
+End Function
+
+'Measurement and acquisition of workpiece position
+Function PoseWork(ByVal task_id As Integer) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("POSE_WORK,%d", task_id)
+	recv = SendRecv(send)
+	PoseWork = Split(recv,",")
+
+End Function
+
+'Acquire the candiate workpieces which order is the second or lower
+Function PoseNext(ByVal task_id As Integer) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("POSE_NEXT,%d", task_id)
+	recv = SendRecv(send)
+	PoseNext = Split(recv,",")
+
+End Function
+
+'****Vision status acquisition****
+'Description:	Queries the status of the 3D Machine Vision System from the RC I/F module.
+'Format:		QUERY_STATUS
+'Return:		<Vision status> + LF
+Function QueryStatus() As Variant
+	Dim recv As String
+
+	recv = SendRecv("QUERY_STATUS")
+	QueryStatus = Split(recv,",")
+End Function
+
+'****Set the scene number of calibration****
+'Description:	Sets the number of Scene(points) that the calibration would be seeing
+'Format:		READY_CALIB,<Scene count for market measurement in RV calibration>
+'Return:		<Vision Status> + LF	
+Function ReadyCalib(ByVal scene_num As Integer) As Variant
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("READY_CALIB,%d", scene_num)
+	recv = SendRecv(send)
+	ReadyCalib = Split(recv,",")
+End Function
+
+'****Calibration measurement (one time)****
+'Description: 	Measures the center coordinate position of the RV Calibration Marker
+'			 	As a result of marker measurement, the following data are saved as a set:
+'				- Scene Number
+'				- Robot Coordinates (x,y,z)
+'				- Vision Coordinates of marker according to vision position measurement
+'Format:	 	CALIB_MARKER,<Scene Number>,
+'				<Marker's Robot Coordinate X>, 
+'				<Marker's Robot Coordinate Y>,
+'				<Marker's Robot Coordinate Z>
+'Return:		<Vision Status>,<Scene Number for RV calibration Marker Measurement Position> + LF
+Function CalibMarker(ByVal scene_index As Integer, ByVal marker_pos As Vector) As Variant
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("CALIB_MARKER,%d,%f,%f,%f", scene_index, PosX(marker_pos), PosY(marker_pos), PosZ(marker_pos) )
+	recv = SendRecv(send)
+	CalibMarker = Split(recv,",")
+End Function
+
+'Grasp-teaching information setting
+Function CatchPoint(_
+	ByVal task_id As Integer, _
+	ByVal grasp_id As Integer, _
+	ByVal tool_offset As Position, _
+	ByVal approach_pos As Position, _
+	ByVal grasp_pos As Position _
+) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("CATCH_POINT,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", _
+	task_id, grasp_id, _
+	PosX(tool_offset), PosY(tool_offset), PosZ(tool_offset), PosRx(tool_offset), PosRy(tool_offset), PosRz(tool_offset), _
+	PosX(approach_pos), PosY(approach_pos), PosZ(approach_pos), PosRx(approach_pos), PosRy(approach_pos), PosRz(approach_pos), _
+	PosX(grasp_pos), PosY(grasp_pos), PosZ(grasp_pos), PosRx(grasp_pos), PosRy(grasp_pos), PosRz(grasp_pos) )
+	recv = SendRecv(send)
+	CatchPoint = Split(recv,",")
+
+End Function
+
+'Version information acquisition
+'Description:	Queries the version number of the machine vision system
+'Format: 		VER_VISION
+'Return:		<Vision Version>,<3D Scanner Version> + LF
+Function VerVision() As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = "VER_VISION"
+	recv = SendRecv(send)
+	VerVision = Split(recv,",")
+
+End Function
+
+'****Mode status acquisition****
+'Description:	Queries the execution mode of the machine vision system.
+'Format:		QUERY_MODE
+'Return:		<Vision status>,<Vision mode number> + LF
+Function QueryMode() As Variant
+	Dim recv As String
+
+	recv = SendRecv("QUERY_MODE")
+	QueryMode = Split(recv,",")
+End Function
+
+'Set the number of Pallet flat surface calculation teaching point.
+Function ReadyRim(ByVal scene_num As Integer) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("READY_RIM,%d", scene_num)
+	recv = SendRecv(send)
+	ReadyRim = Split(recv,",")
+
+End Function
+
+'Set the Pallet flat surface calculation teaching point.
+Function InputRim(ByVal scene_index As Integer, ByVal pin_pos As Vector) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("INPUT_RIM,%d,%f,%f,%f", scene_index, PosX(pin_pos), PosY(pin_pos), PosZ(pin_pos) )
+	recv = SendRecv(send)
+	InputRim = Split(recv,",")
+
+End Function
+
+'Registration of multiple scanner positions (slider-mount option)
+Function ScannerPos(Byval scanner_id As Integer) As Variant
+
+	Dim send As String
+	Dim recv As String
+
+	send = Sprintf("SCANNER_POS,%d", scanner_id)
+	recv = SendRecv(send)
+	ScannerPos = Split(recv,",")
+
+End Function
+
+'Release all tasks
+Function FreeAll() As Variant
+
+	Dim recv As String
+
+	recv = SendRecv("FREE_ALL")
+	FreeAll = Split(recv,",")
+
+End Function

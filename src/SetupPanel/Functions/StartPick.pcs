@@ -1,0 +1,38 @@
+'!TITLE "Denso robot program"
+
+#Include "..\RV_Setup_Main.h"
+
+Sub Main
+	Dim res As Integer
+
+	TakeArm Keep = 1
+
+	res = MsgBox("Is TOOL"+STR(CurTool)+" correct?",1)
+	If res = 2 Then Exit Sub
+
+	' Vacuum Off
+	Set IO[65]
+	Reset IO[64]
+	Delay 100
+
+	ChangeTool 1
+	Move P, P0					' Home Position 
+	
+	ChangeTool 2				' Set the Tool Offset
+	Move P, P[PICK_COORD_POS] 	' Approach Coordinate
+	Move L, P[PART_COORD_POS]	' Part Coordinate
+	
+	' Vacuum On
+	Set IO[64]
+	Reset IO[65]
+	Delay 100
+	
+	Move P, P[PICK_COORD_POS] 	' Approach Coordinate
+
+	Move P, P5					' Move To Pick Position
+
+	'Vacuum Off
+	Set IO[65]
+	Reset IO[64]
+	Delay 100
+End Sub

@@ -1,0 +1,48 @@
+'!TITLE "Set the marker teaching number"
+#include "..\RV_API\RV_API.pcs"
+
+Sub Main(ByVal scene_num As Integer)
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+	Dim com_status AS Integer
+
+	Reset IO[128]							' Reset Task Complete Flag 
+	Reset IO[129]							' Reset TaskErro Flag
+
+	com_Status = ComOpen()					' Open the communication line
+
+	If com_Status = -1 Then 
+		SET IO[129]
+		GoTo finally
+	End If 
+	
+	vis_data = QueryMode()					' Check Current Operation Mode Vision System
+	vis_status = GetVisStatus(vis_data)		' Check for Version Number of Vision System
+
+	If vis_status <> 0 Then Goto finally	' Vision System Version Non Existent
+	vis_mode = GetVisMode(vis_data)			' Extract Vision Mode Value
+
+	' Check that Vision System is in Calibration Mode before continuing
+	If (vis_mode <> VIS_MODE_CALIB_) And (vis_mode <> VIS_MODE_CALIB_CHECK_) Then
+		MsgBox("Vision mode is not the Calibration mode.")
+		Set IO[129]	'Error
+		Goto finally
+	End If
+
+	' Set the scene number
+	vis_data = ReadyCalib(scene_num)		' Set number of Points to use for Calibration
+	vis_status = GetVisStatus(vis_data)		' Check for Version Number of Vision System
+	If vis_status <> 0 Then Goto finally
+
+finally:
+
+	' Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then 
+		MsgBox("Vision status:" & vis_status)
+		Set IO[129]							' Error
+	End If
+
+	ComClose								' Close the communication line
+	SET IO[128]
+End Sub

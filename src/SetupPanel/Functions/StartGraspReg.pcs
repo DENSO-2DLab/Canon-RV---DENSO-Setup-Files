@@ -1,0 +1,39 @@
+'!TITLE "Denso robot program"
+#Include "..\RV_Setup_Main.h"
+
+Sub Main(ByVal TaskID As Integer, ByVal GraspID As Integer)
+	Dim Msg_Result As Integer = 0
+	
+	I[PLPART_FOUND] = GRAY			' Panel Flag: Set To GREY
+	S[LBPART_FOUND_COORD] = ""		' Panel Flag: Set String
+	I[NBTASK_ID] = TaskID			' Panel Flag: Save Task ID
+	I[NBGRASP_ID] = GraspID			' Panel Flag: Save Grasp ID
+
+	Do   
+		P[PART_COORD_POS] = RV_PoseWork(TaskID)								' Set TaskID
+		If Pos_Empty(P[PART_COORD_POS]) <> 1 Then Exit Do					' If Part Found Exit Loop
+		Msg_Result = MsgBox("No Part Found. Retry?", 5,	"No Part Found")	' No Part Found
+	Loop Until Msg_Result = 2  
+
+	If Msg_Result = 2 Then GoTo Finally						' If Part Detection was Cancelled then exit sub
+	
+	I[PLPART_FOUND] = GREEN									' Panel Flag: Set To Green
+	S[LBPART_FOUND_COORD] = Pos2String(P[PART_COORD_POS])	' Panel	Flag		
+Exit Sub
+
+Finally:
+	MsgBox("Part Detection Failed")
+	I[PLPART_FOUND] = RED									' Set To Red (Panel)
+End Sub
+
+' --- Check if its Empty ---
+Function Pos_Empty(Pos AS Position) As Integer
+	Dim Pos_Zero As Position 
+	Pos_Zero = P(0,0,0,0,0,0)
+
+	If Pos_Zero = Pos Then 
+		Pos_Empty = 1 	' Position is all 0s
+	Else	
+		Pos_Empty = -1	' Position has an actual value
+	End If 
+End Function

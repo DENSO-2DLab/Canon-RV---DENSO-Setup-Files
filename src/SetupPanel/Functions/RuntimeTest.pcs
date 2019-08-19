@@ -1,0 +1,76 @@
+'!TITLE "Denso robot program"
+#Include "..\RV_Setup_Main.h"
+#Include "PublicFunctions.pcs"
+
+Public vis_status As Integer
+Public bin_empty As Integer
+Public grasp_candidate_yn As Integer
+Public grasp_pos As Position
+Public app_pos As Position
+Public depart_pos As Position	'Position where robot starts moving to the right above direction, not to the approach direction.
+
+Sub GetPartPosData(ByVal task_id As Integer, ByVal bin_up_pos As Integer, ByVal app_part_dist As Double, ByRef returnData(3) As Position)
+	Dim vis_data As Variant
+	I0 = -1										' Stop Flag
+	
+	vis_data = PoseWork(task_id)				' Execute measurement
+	
+	Do
+		returnData(0) = P(0,0,0,0,0,0,-1)		' Approach Coordinate
+		returnData(1) = P(0,0,0,0,0,0,-1)		' Pick Coordinate
+		returnData(2) = P(0,0,0,0,0,0,-1)		' Depart Coordinate
+		
+		' Check the status
+		vis_status = GetVisStatus(vis_data)		
+		If vis_status <> 0 Then 
+			MsgBox("Vision Status Error: " + STR(vis_status))
+			Exit Sub
+		End If
+
+		' The box is empty, or it is impossible to judge whether the box is empty.
+		bin_empty = GetPalletEmpty(vis_data)
+		If (bin_empty = 0) Or (bin_empty = 65535) Then 
+			I0 = 1
+			MsgBox("Bin Empty or No reachable parts error" + STR(bin_empty))
+			Exit Sub
+		End If
+
+		' No grasp candidate workpiece exists. 
+		grasp_candidate_yn = GetGraspCandidateYN(vis_data)
+		If grasp_candidate_yn = 0 Then 
+			MsgBox("No Grasp Candidate Exist Error")
+			Exit Sub
+		End If
+
+		' Get the workpiece position. 
+		grasp_pos = GetWorkPos(vis_data)	' Canon System Setup to Return Grasp Coordiante (not part center)
+		LetF grasp_pos = CP_FIG				' Set Flexible Figure
+		
+		' Calculate the approach position
+		app_pos = DevH(grasp_pos, P(0,0,-app_part_dist))
+		LetF app_pos = PTP_FIG
+		
+		' Calculate the position where robot starts moving to its right above direction
+		depart_pos = grasp_pos
+		LetZ depart_pos = PosZ(P[bin_up_pos])
+		LetF depart_pos = CP_FIG
+		
+		' Check the Motion range (grasp, approach, detach position
+		If OutRange(grasp_pos) = 0 And OutRange(app_pos) = 0 And OutRange(depart_pos) = 0 Then 
+			' Output Data
+			returnData(0) = app_pos			' Return Approach Position
+			returnData(1) = grasp_pos		' Return Pick Position	 
+			returnData(2) = depart_pos		' Return Depart Position
+			Exit Sub
+		End If
+		
+		' Position is out-of-motion range. Get the next grasp candidate with POSE_NEXT
+		vis_data = PoseNext(task_id)
+	Loop
+End Sub
+
+Sub RVLoadTask(ByVal task_id As Integer)
+	Dim loadTask_data As Variant
+	loadTask_data = LoadTask(task_id)
+End Sub
+

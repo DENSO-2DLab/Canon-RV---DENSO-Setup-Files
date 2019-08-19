@@ -1,0 +1,41 @@
+'!TITLE "Marker measurement"
+#include "..\RV_API\RV_API.pcs"
+
+Sub Main(ByVal scene_index As Integer)
+	Dim vis_data As Variant
+	Dim vis_status As Integer
+	Dim vis_mode As Integer
+
+	Reset IO[128]							' Reset Task Done Flag
+	Reset IO[129]							' Reset Error Flag
+
+	ComOpen									' Open the communication line
+	
+	vis_data = QueryMode					' Check Current Operation Mode Vision System
+	vis_status = GetVisStatus(vis_data)		' Check for Version Number of Vision System
+	
+	If vis_status <> 0 Then Goto finally	' Vision System Version Non Existent
+	vis_mode = GetVisMode(vis_data)			' Extract Vision Mode Value
+
+	' Check that Vision System is in Calibration Mode before continuing
+	If (vis_mode <> VIS_MODE_CALIB_) And (vis_mode <> VIS_MODE_CALIB_CHECK_) Then
+		MsgBox("Vision mode is not the Calibration mode.")
+		Set IO[129]
+		Goto finally
+	End If
+
+	' Marker measurement
+	vis_data = CalibMarker(scene_index, PVec(CurPos))	' Send Current Position To Vision System
+	vis_status = GetVisStatus(vis_data)					' Vision System Version Non Existent
+	If vis_status <> 0 Then Goto finally
+	
+finally:
+	' Display the number if Vision status is abnormal.
+	If vis_status <> 0 Then 
+		MsgBox("Vision status:" & vis_status)
+		Set IO[129]
+	End If 
+
+	ComClose								' Close the communication line
+	Set IO[128]
+End Sub
